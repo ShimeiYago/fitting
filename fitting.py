@@ -3,6 +3,7 @@
 import mdtraj as md
 import numpy as np
 import os
+import sys
 import argparse
 from weightdict import atomicWeightsDecimal as wdict
 
@@ -11,14 +12,13 @@ def main():
     parser = argparse.ArgumentParser(description='fitting trajectory by super-impose')
     parser.add_argument('-t', '--trajectory', required=True, help='trajectory file (.trr)')
     parser.add_argument('-p', '--topology', required=True, help='topology file (.gro, .pdb)')
-    parser.add_argument('-o', '--output', default="output/fitted.trr", help='output file path (default: output/fitted.trr)')
+    parser.add_argument('-o', '--output', default="fitted.trr", help='output file path (default: output/fitted.trr)')
     args = parser.parse_args()
-
-    os.makedirs(args.output, exist_ok=True)
 
 
     ### read file ###
     trj = md.load_trr(args.trajectory, top=args.topology)
+    n_frames = trj.n_frames
 
     ### make weight list ###
     wlist = make_weightlist(trj)
@@ -26,23 +26,27 @@ def main():
     ### centering ###
     trj.center_coordinates(mass_weighted=True)
 
+
     ### fitting ###
+    print(f'fitting the trajectory ({n_frames} frames, {trj.n_atoms} atoms)')
+
     trj_array = trj.xyz
     fitted_trj_array = np.empty_like(trj_array)
 
-    for i in range(trj_array.shape[0]):
+    for i in range(n_frames):
         fitted_structure = super_impose(trj_array[i], trj_array[0], wlist)
         fitted_trj_array[i] = fitted_structure
 
-        if i % 100 == 0:
-            print(f"frame {i}")
-
+        if i % 10 == 0 or i+1 == n_frames:
+            progress_frames = i+1
+            progress_percentage = int(progress_frames/n_frames * 100)
+            print(f"\rprogress: {progress_percentage}% ({progress_frames} frames)", end="")
+    
+    print(f"\ncompleted!")
 
     ### save ###
     fitted_trj = md.Trajectory(fitted_trj_array, trj.topology)
     fitted_trj.save_trr(args.output)
-
-    print(fitted_trj)
 
 
 
