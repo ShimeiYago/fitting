@@ -50,14 +50,6 @@ def main():
     np.savez(outpath, trj=fitted_trj, wlist=wlist)
 
 
-
-def make_weightlist(trj, weight_key='standard'):
-    atoms_dict = trj.topology.to_dataframe()[0].element
-
-    wlist = [float(wdict[atom][weight_key]) for atom in atoms_dict]
-    return wlist
-
-
 def super_impose(target_structure:np.ndarray, reference_structure:np.ndarray, wlist):
     ### matrix U ###
     U = np.empty((3,3))
