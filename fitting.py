@@ -13,6 +13,7 @@ def main():
     parser.add_argument('-t', '--trajectory', required=True, help='trajectory file (.trr)')
     parser.add_argument('-p', '--topology', required=True, help='topology file (.gro, .pdb)')
     parser.add_argument('-o', '--output', default="fitted.trr", help='output file path (default: output/fitted.trr)')
+    parser.add_argument('-i', action='store_True', help='fit to init structure. if not called, fit to mean structure.')
     args = parser.parse_args()
 
 
@@ -20,21 +21,28 @@ def main():
     trj = md.load_trr(args.trajectory, top=args.topology)
     n_frames = trj.n_frames
 
+    trj_array = trj.xyz
+
+    print(f'fitting the trajectory ({n_frames} frames, {trj.n_atoms} atoms)')
+
+
     ### make weight list ###
     wlist = make_weightlist(trj)
 
-    ### centering ###
-    trj.center_coordinates(mass_weighted=True)
+
+    ### decide reference_structure ###
+    if args.i:
+        trj.center_coordinates(mass_weighted=True) # centering
+        reference_array = trj_array[0]
+    
+    else:
+        reference_array = trj_array.mean(axis=0) # mean structure
 
 
     ### fitting ###
-    print(f'fitting the trajectory ({n_frames} frames, {trj.n_atoms} atoms)')
-
-    trj_array = trj.xyz
     fitted_trj_array = np.empty_like(trj_array)
-
     for i in range(n_frames):
-        fitted_structure = super_impose(trj_array[i], trj_array[0], wlist)
+        fitted_structure = super_impose(trj_array[i], reference_array, wlist)
         fitted_trj_array[i] = fitted_structure
 
         if i % 10 == 0 or i+1 == n_frames:
@@ -55,6 +63,10 @@ def make_weightlist(trj, weight_key='standard'):
 
     wlist = [float(wdict[atom][weight_key]) for atom in atoms_dict]
     return wlist
+
+
+def mean_structure(trj:np.ndarray):
+
 
 
 def super_impose(target_structure:np.ndarray, reference_structure:np.ndarray, wlist):
