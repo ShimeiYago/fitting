@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
 
-import mdtraj as md
+# import mdtraj as md
 import numpy as np
 import os
 import sys
 import argparse
-from weightdict import atomicWeightsDecimal as wdict
+from lib.weightdict import atomicWeightsDecimal as wdict
 
 
 def main():
     parser = argparse.ArgumentParser(description='fit center of gravity to origin coordinates')
     parser.add_argument('-t', '--trajectory', required=True, help='trajectory file (.trr)')
     parser.add_argument('-p', '--topology', required=True, help='topology file (.gro, .pdb)')
-    parser.add_argument('-o', '--outprefix', default="./centering", help='output file prefix')
+    parser.add_argument('-o', '--out', default="./", help='output dir or file path(.npz)')
     args = parser.parse_args()
 
+    if os.path.isdir(args.out):
+        outpath = os.path.join(args.out, "preprocessed.npz")
+    
+    else:
+        outpath = args.out
+        
 
     ### read file ###
     trj = md.load_trr(args.trajectory, top=args.topology)
@@ -32,7 +38,7 @@ def main():
 
 
     ### save ###
-    outpath = f"{args.outprefix}.npz"
+    outpath = f"{args.outdir}.npz"
     np.savez(outpath, trj=trj.xyz, wlist=wlist)
 
 

@@ -9,9 +9,16 @@ import argparse
 def main():
     parser = argparse.ArgumentParser(description='fitting trajectory by super-impose')
     parser.add_argument('-n', '--npz', required=True, help='trajectory and weight-list (.npz)')
-    parser.add_argument('-o', '--outprefix', default="./fitted", help='output file prefix')
+    parser.add_argument('-o', '--out', default="./", help='output dir or file path(.npz)')
     parser.add_argument('-i', action='store_true', help='fit to init structure. if not called, fit to mean structure.')
     args = parser.parse_args()
+
+
+    if os.path.isdir(args.out):
+        outpath = os.path.join(args.out, "fitted.npz")
+    
+    else:
+        outpath = args.out
 
 
     ### read file ###
@@ -46,7 +53,6 @@ def main():
 
 
     ### save ###
-    outpath = f"{args.outprefix}.npz"
     np.savez(outpath, trj=fitted_trj, wlist=wlist)
 
 

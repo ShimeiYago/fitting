@@ -11,8 +11,16 @@ def main():
     parser = argparse.ArgumentParser(description='convert npz to trr')
     parser.add_argument('-n', '--npz', required=True, help='trajectory and weight-list (.npz)')
     parser.add_argument('-p', '--topology', required=True, help='topology file (.gro, .pdb)')
-    parser.add_argument('-o', '--outprefix', default="./fitted", help='output file prefix')
+    parser.add_argument('-o', '--out', default="./", help='output dir or file path(.trr)')
     args = parser.parse_args()
+
+
+    if os.path.isdir(args.out):
+        filename, _ = os.path.splitext(os.path.basename(args.npz))
+        outpath = os.path.join(args.out, f"{filename}.trr")
+    
+    else:
+        outpath = args.out
 
 
     ### read file ###
