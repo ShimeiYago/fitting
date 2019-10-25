@@ -18,15 +18,13 @@ def main():
     ### read file ###
     npz = np.load(args.npz)
     trj = npz['trj']    
-    n_frames = trj.shape[0]
-    print(f'fitting the trajectory ({n_frames} frames)')
 
+    topology = md.load(args.topology).topology
 
     ### save ###
     outpath = f"{args.outprefix}.trr"
-    trj_mdtraj = md.Trajectory(trj, trj.topology)
+    trj_mdtraj = md.Trajectory(trj, topology)
     trj_mdtraj.save_trr(outpath)
-
 
 
 if __name__ == '__main__':
