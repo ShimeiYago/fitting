@@ -40,7 +40,7 @@ def main():
 
     ### fitting ###
     fitted_trj = np.empty_like(trj)
-    for i in range(1000):
+    for i in range(n_frames):
         fitted_structure = super_impose(trj[i], reference_structure, wlist)
         fitted_trj[i] = fitted_structure
 
