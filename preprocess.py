@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# import mdtraj as md
+import mdtraj as md
 import numpy as np
 import os
 import sys
@@ -38,7 +38,6 @@ def main():
 
 
     ### save ###
-    outpath = f"{args.outdir}.npz"
     np.savez(outpath, trj=trj.xyz, wlist=wlist)
 
 

@@ -30,7 +30,6 @@ def main():
     topology = md.load(args.topology).topology
 
     ### save ###
-    outpath = f"{args.outprefix}.trr"
     trj_mdtraj = md.Trajectory(trj, topology)
     trj_mdtraj.save_trr(outpath)
 
