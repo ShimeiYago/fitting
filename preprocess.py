@@ -5,7 +5,7 @@ import numpy as np
 import os
 import sys
 import argparse
-from lib.weightdict import atomicWeightsDecimal as wdict
+from dicts.weightdict import atomicWeightsDecimal as wdict
 
 
 def main():
