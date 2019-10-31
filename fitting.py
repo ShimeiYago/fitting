@@ -2,7 +2,6 @@
 
 import numpy as np
 import os
-import sys
 import argparse
 
 
@@ -53,7 +52,8 @@ def main():
 
 
     ### save ###
-    np.savez(outpath, trj=fitted_trj, wlist=wlist)
+    atomlist = npz['atomlist']
+    np.savez(outpath, trj=fitted_trj, atomlist=atomlist, wlist=wlist)
 
 
 def super_impose(target_structure:np.ndarray, reference_structure:np.ndarray, wlist):
