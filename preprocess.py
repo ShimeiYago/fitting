@@ -30,7 +30,7 @@ def main():
 
 
     ### make weight list ###
-    wlist = make_weightlist(trj)
+    atomlist, wlist = make_weightlist(trj.topology)
 
 
     ### centering ###
@@ -38,14 +38,13 @@ def main():
 
 
     ### save ###
-    np.savez(outpath, trj=trj.xyz, wlist=wlist)
+    np.savez(outpath, trj=trj.xyz, atomlist=atomlist, wlist=wlist)
 
 
-def make_weightlist(trj, weight_key='standard'):
-    atoms_dict = trj.topology.to_dataframe()[0].element
-
-    wlist = [float(wdict[atom][weight_key]) for atom in atoms_dict]
-    return wlist
+def make_weightlist(top, weight_key='standard'):
+    atomlist = [atom for atom in top.to_dataframe()[0].name]
+    wlist = [float(wdict[atom][weight_key]) for atom in top.to_dataframe()[0].element]
+    return atomlist, wlist
 
 
 if __name__ == '__main__':
