@@ -1,111 +1,45 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
+import mdtraj as md
 import numpy as np
 import os
 import argparse
 
+from utils import preprocess
+from utils import recursive_fitting
+
+MAX_WOKERS = 4
 
 def main():
-    parser = argparse.ArgumentParser(description='fitting trajectory by super-impose')
-    parser.add_argument('-n', '--npz', required=True, help='trajectory and weight-list (.npz)')
-    parser.add_argument('-o', '--out', default="./", help='output dir or file path(.npz)')
-    parser.add_argument('-i', action='store_true', help='fit to init structure. if not called, fit to mean structure.')
+    parser = argparse.ArgumentParser(description='fitting trajectory.')
+    parser.add_argument('-t', '--trajectory', required=True, help='trajectory file (.trr)')
+    parser.add_argument('-p', '--topology', required=True, help='topology file (.gro, .pdb)')
+    parser.add_argument('-o', '--out', required=True, help='output file path (.trr)')
     args = parser.parse_args()
 
 
-    if os.path.isdir(args.out):
-        outpath = os.path.join(args.out, "fitted.npz")
-    
-    else:
-        outpath = args.out
-
-
     ### read file ###
-    npz = np.load(args.npz)
-    trj = npz['trj']    
-    n_frames = trj.shape[0]
-    print(f'fitting the trajectory ({n_frames} frames)')
-
-    wlist = npz['wlist']
+    trj_mdtraj = md.load_trr(args.trajectory, top=args.topology)
+    n_frames = trj_mdtraj.n_frames
+    print(f'Trajectory Info ({n_frames} frames, {trj_mdtraj.n_atoms} atoms)')
 
 
-    ### decide reference_structure ###
-    if args.i:
-        reference_structure = trj[0]
-    
-    else:
-        reference_structure = trj.mean(axis=0) # mean structure
+    ### preprocess ###
+    trj_mdtraj, atomlist, wlist = preprocess(trj_mdtraj)
 
 
     ### fitting ###
-    fitted_trj = np.empty_like(trj)
-    for i in range(n_frames):
-        fitted_structure = super_impose(trj[i], reference_structure, wlist)
-        fitted_trj[i] = fitted_structure
+    trj_array = recursive_fitting(trj_mdtraj.xyz, wlist, MAX_WOKERS)
 
-        if i % 10 == 0 or i+1 == n_frames:
-            progress_frames = i+1
-            progress_percentage = int(progress_frames/n_frames * 100)
-            print(f"\rprogress: {progress_percentage}% ({progress_frames} frames)", end="")
-    
-    print(f"\ncompleted!")
+
+    ### ndarray to trr ###
+    topology = trj_mdtraj.topology
+    trj_mdtraj = md.Trajectory(trj_array, topology)
 
 
     ### save ###
-    atomlist = npz['atomlist']
-    np.savez(outpath, trj=fitted_trj, atomlist=atomlist, wlist=wlist)
+    trj_mdtraj.save_trr(args.out)
 
 
-def super_impose(target_structure:np.ndarray, reference_structure:np.ndarray, wlist):
-    ### matrix U ###
-    U = np.empty((3,3))
-    for i in range(3):
-        for j in range(3):
-            U[i][j] = sum( [wlist[n]*target_structure[n,i]*reference_structure[n,j] for n in range(target_structure.shape[0])] )
-
-    ### matrix OMEGA ###
-    OMEGA = np.empty((6,6))
-    for i in range(3):
-        for j in range(3):
-            OMEGA[i][j] = 0
-            OMEGA[i+3][j+3] = 0
-            OMEGA[i+3][j] = U[i][j]
-            OMEGA[i][j+3] = U.T[i][j]
-
-
-    ### resolve Eigenvalue problem ###
-    eig_val, eig_vec =np.linalg.eig(OMEGA)
-
-    omegas = eig_vec.T
-
-    ### split eig_vec to h and k ###
-    hks = np.array([omegas[i] for i in range(6) if eig_val[i] > 0])
-    hks = hks * np.sqrt(2) # root2
-
-    k = np.empty((3,3))
-    h = np.empty((3,3))
-    for i in range(3):
-        for j in range(3):
-            k[i][j] = hks[j][i]
-            h[i][j] = hks[j][i+3]
-    
-
-    ### rotation matrix R ###
-    R = np.empty((3,3))
-    for i in range(3):
-        for j in range(3):
-            R[i][j] = sum( [k[i][a]*h[j][a] for a in range(len(h))] )
-
-    
-    ### target_trj to fitted_trj ###
-    fitted_structure = np.empty_like(target_structure)
-    for i in range(3):
-        for n in range(fitted_structure.shape[0]):
-            fitted_structure[n,i] = sum( [R[i,j]*target_structure[n,j] for j in range(3)] )
-    
-    
-    return fitted_structure
-
-
-if __name__ == '__main__':
+if __name__=='__main__':
     main()
