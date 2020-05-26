@@ -8,8 +8,6 @@ import argparse
 from utils import preprocess
 from utils import recursive_fitting
 
-MAX_WOKERS = 4
-
 def main():
     parser = argparse.ArgumentParser(description='fitting trajectory.')
     parser.add_argument('-t', '--trajectory', required=True, help='trajectory file (.trr)')
