@@ -12,6 +12,7 @@ def main():
     parser = argparse.ArgumentParser(description='fitting trajectory.')
     parser.add_argument('-t', '--trajectory', required=True, help='trajectory file (.trr)')
     parser.add_argument('-p', '--topology', required=True, help='topology file (.gro, .pdb)')
+    parser.add_argument('-r', '--recursive', action='store_true', default=False, help='do fitting 2 times')
     parser.add_argument('-o', '--out', required=True, help='output file path (.trr)')
     parser.add_argument('-w', '--max_wokers', default=2, type=int, help='max_wokers of multi-process')
     args = parser.parse_args()
@@ -28,7 +29,7 @@ def main():
 
 
     ### fitting ###
-    trj_array = recursive_fitting(trj_mdtraj.xyz, wlist, args.max_wokers)
+    trj_array = recursive_fitting(trj_mdtraj.xyz, wlist, args.max_wokers, args.recursive)
 
 
     ### ndarray to trr ###

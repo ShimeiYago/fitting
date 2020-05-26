@@ -3,35 +3,29 @@ from concurrent.futures import ProcessPoolExecutor
 import time
 
 
-def recursive_fitting(trj:np.ndarray, wlist:list, max_wokers:int=1):
+def recursive_fitting(trj:np.ndarray, wlist:list, max_wokers:int, whether_recur:bool):
 
     ### init fitting ###
-    print('init fitting')
-    reference_structure = trj[0]
-
-    myprocess = MyProcess(superimpose, trj.shape[0])
-    with ProcessPoolExecutor(max_workers=max_wokers) as executor:
-        futures = []
-        for i in range(trj.shape[0]):
-            futures.append(executor.submit(myprocess, i, trj[i], reference_structure, wlist))
-
-    trj = np.array([f.result() for f in futures])
-
+    print('First fitting into init structure')
+    trj = do_fitting(trj, trj[0], wlist, max_wokers)
 
     ### second fitting ###
-    print('\nsecond fitting')
-    reference_structure = trj.mean(axis=0)
-
-    myprocess = MyProcess(superimpose, trj.shape[0])
-    with ProcessPoolExecutor(max_workers=max_wokers) as executor:
-        futures = []
-        for i in range(trj.shape[0]):
-            futures.append(executor.submit(myprocess, i, trj[i], reference_structure, wlist))
-
-    trj = np.array([f.result() for f in futures])
+    if whether_recur:
+        print('\nSecond fitting into mean structure')
+        trj = do_fitting(trj, trj.mean(axis=0), wlist, max_wokers)
 
     print()
     return trj
+
+
+def do_fitting(trj:np.ndarray, reference_structure:np.ndarray, wlist:list, max_wokers:int):
+    myprocess = MyProcess(superimpose, trj.shape[0])
+    with ProcessPoolExecutor(max_workers=max_wokers) as executor:
+        futures = []
+        for i in range(trj.shape[0]):
+            futures.append(executor.submit(myprocess, i, trj[i], reference_structure, wlist))
+
+    return np.array([f.result() for f in futures])
 
 
 
