@@ -14,7 +14,7 @@ def main():
     parser.add_argument('--npy', required=True, help='.npy')
     parser.add_argument('-p', '--topology', required=True, help='topology file (.gro, .pdb)')
     parser.add_argument('-r', '--recursive', action='store_true', default=False, help='do fitting 2 times')
-    parser.add_argument('-o', '--out', required=True, help='output file path (.trr)')
+    parser.add_argument('-o', '--out', required=True, help='output file path (.trr or .npy)')
     parser.add_argument('-w', '--max_wokers', default=2, type=int, help='max_wokers of multi-process')
     args = parser.parse_args()
 
@@ -41,7 +41,11 @@ def main():
 
 
     ### save ###
-    trj_mdtraj.save_trr(args.out)
+    ext = os.path.splitext(args.out)[1]
+    if ext == ".trr":
+        trj_mdtraj.save_trr(args.out)
+    elif ext == ".npy":
+        np.save(args.out, trj_mdtraj.xyz)
 
 
 if __name__=='__main__':
