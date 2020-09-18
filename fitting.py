@@ -11,6 +11,7 @@ from utils import recursive_fitting
 def main():
     parser = argparse.ArgumentParser(description='fitting trajectory.')
     parser.add_argument('-t', '--trajectory', required=True, help='trajectory file (.trr)')
+    parser.add_argument('--npy', required=True, help='.npy')
     parser.add_argument('-p', '--topology', required=True, help='topology file (.gro, .pdb)')
     parser.add_argument('-r', '--recursive', action='store_true', default=False, help='do fitting 2 times')
     parser.add_argument('-o', '--out', required=True, help='output file path (.trr)')
@@ -20,6 +21,8 @@ def main():
 
     ### read file ###
     trj_mdtraj = md.load_trr(args.trajectory, top=args.topology)
+    if args.npy:
+        trj_mdtraj.xyz = np.load(args.npy)
     n_frames = trj_mdtraj.n_frames
     print(f'Trajectory Info ({n_frames} frames, {trj_mdtraj.n_atoms} atoms)')
 
