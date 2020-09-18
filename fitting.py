@@ -8,9 +8,11 @@ import argparse
 from utils import preprocess
 from utils import recursive_fitting
 
+MAINCHAIN_TRR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mainchain.trr")
+
 def main():
     parser = argparse.ArgumentParser(description='fitting trajectory.')
-    parser.add_argument('-t', '--trajectory', required=True, help='trajectory file (.trr)')
+    parser.add_argument('-t', '--trajectory', default=MAINCHAIN_TRR, help='trajectory file (.trr)')
     parser.add_argument('--npy', required=True, help='.npy')
     parser.add_argument('-p', '--topology', required=True, help='topology file (.gro, .pdb)')
     parser.add_argument('-r', '--recursive', action='store_true', default=False, help='do fitting 2 times')
