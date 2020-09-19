@@ -17,7 +17,7 @@ def main():
     parser.add_argument('--trj', required=True, help='.npy')
     parser.add_argument('-p', '--topology', required=True, help='topology file (.gro, .pdb)')
     parser.add_argument('-r', '--recursive', action='store_true', default=False, help='do fitting 2 times')
-    parser.add_argument('-o', '--out', required=True, help='output file path (.trr or .npy)')
+    parser.add_argument('-o', '--out', required=True, help='output file path (filename.trr or filename.npy or filename)')
     parser.add_argument('-w', '--max_wokers', default=2, type=int, help='max_wokers of multi-process')
     args = parser.parse_args()
 
@@ -51,6 +51,9 @@ def main():
         trj_mdtraj.save_trr(args.out)
     elif ext == ".npy":
         np.save(args.out, trj_mdtraj.xyz)
+    else:
+        trj_mdtraj.save_trr(args.out + '.trr')
+        np.save(args.out + '.npy', trj_mdtraj.xyz)
 
 
 def load_trj(fp):
