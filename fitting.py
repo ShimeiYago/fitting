@@ -2,6 +2,7 @@
 
 import mdtraj as md
 import numpy as np
+import pandas as pd
 import os
 import argparse
 
@@ -12,8 +13,8 @@ MAINCHAIN_TRR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mainch
 
 def main():
     parser = argparse.ArgumentParser(description='fitting trajectory.')
-    parser.add_argument('-t', '--trajectory', default=MAINCHAIN_TRR, help='trajectory file (.trr)')
-    parser.add_argument('--npy', required=True, help='.npy')
+    parser.add_argument('-t', '--trr', default=MAINCHAIN_TRR, help='trajectory file (.trr)')
+    parser.add_argument('--trj', required=True, help='.npy')
     parser.add_argument('-p', '--topology', required=True, help='topology file (.gro, .pdb)')
     parser.add_argument('-r', '--recursive', action='store_true', default=False, help='do fitting 2 times')
     parser.add_argument('-o', '--out', required=True, help='output file path (.trr or .npy)')
@@ -22,9 +23,11 @@ def main():
 
 
     ### read file ###
-    trj_mdtraj = md.load_trr(args.trajectory, top=args.topology)
-    if args.npy:
-        trj_mdtraj.xyz = np.load(args.npy)
+    trj_mdtraj = md.load_trr(args.trr, top=args.topology)
+
+    if args.trj:
+        trj_mdtraj.xyz = load_trj(args.trj)
+
     n_frames = trj_mdtraj.n_frames
     print(f'Trajectory Info ({n_frames} frames, {trj_mdtraj.n_atoms} atoms)')
 
@@ -48,6 +51,17 @@ def main():
         trj_mdtraj.save_trr(args.out)
     elif ext == ".npy":
         np.save(args.out, trj_mdtraj.xyz)
+
+
+def load_trj(fp):
+    ext = os.path.splitext(fp)[1]
+    if ext == '.npy':
+        return np.load(fp)
+
+    elif ext == '.xvg':
+        data = np.loadtxt(fp, comments='@', delimiter='\t', skiprows=14)[:, 1:]
+        data = data.reshape(data.shape[0], -1, 3)
+        return data
 
 
 if __name__=='__main__':
